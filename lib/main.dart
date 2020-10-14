@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-
+import 'dart:convert';
+import 'WeatherData.dart';
+import 'weekDays.dart';
 void main() {
   runApp(MyApp());
   
@@ -53,24 +55,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  //int _counter = 0;
   bool _isLoaded = false;
+  WeatherData _weatherOfToday = null;
 
   @override
-  void initState(){
+  void initState() {
     super.initState();
 
-    String city_name = "Vannes";
-    String state_code = "56270";
-    String country_code = "";
-    String API_key = "26801e3a2bb2c98e0caca11bb7b8dbcf";  
-    String lang = "fr";
-    String url="api.openweathermap.org/data/2.5/weather?q=$city_name,$state_code,$country_code&appid=$API_key&lang=$lang&units=metric";
-    http.read(url)
-    .catchError((res) => setState((){
-        _isLoaded = true;
-         print('Error');
-      }))
     // Future<void>.delayed(
     //   Duration(seconds: 10),
     //   () => setState((){
@@ -78,10 +70,29 @@ class _MyHomePageState extends State<MyHomePage> {
     //     print('test');
     //   })
     // )
+    String _cityName = "Vannes";
+    String _stateCode = "56000";
+    String _countryCode = "33";
+    String _apiKey = "26801e3a2bb2c98e0caca11bb7b8dbcf";  
+    String _lang = "fr";
+    String _url="https://api.openweathermap.org/data/2.5/weather?q=$_cityName,$_stateCode,$_countryCode&appid=$_apiKey&lang=$_lang&units=metric";
+    //api.openweathermap.org/data/2.5/weather?q=Vannes,56000,33&appid=26801e3a2bb2c98e0caca11bb7b8dbcf&lang=fr&units=metric
+    http.read(_url)
     .then((res) => setState((){
+        //print(res);
+        final _parsed = json.decode(res);
+        print("test");
+        _weatherOfToday = WeatherData.fromJson(_parsed);
+        print("RESULT : " + _weatherOfToday.toString());
         _isLoaded = true;
          print('test2');
+      }))
+      .catchError((res) => setState((){
+        _isLoaded = true;
+         print('Error: $res');
       }));
+
+      
   }
 
   // WeatherData _getWeatherData(){
@@ -104,16 +115,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+  // void _incrementCounter() {
+  //   setState(() {
+  //     // This call to setState tells the Flutter framework that something has
+  //     // changed in this State, which causes it to rerun the build method below
+  //     // so that the display can reflect the updated values. If we changed
+  //     // _counter without calling setState(), then the build method would not be
+  //     // called again, and so nothing would appear to happen.
+  //     _counter++;
+  //   });
+  // }
 
   Widget displayLoaded(){
     return Container(
@@ -123,21 +134,21 @@ class _MyHomePageState extends State<MyHomePage> {
             Container(
               padding: EdgeInsets.all(15),
               color: Colors.blue[800],
-              height: 310.0,
+              height: 400.0,
               child: Column(
                 children: [
                   Row(
                     children: <Widget>[
                       Expanded(
                         child: Text(
-                          "15 °C",
+                          "${_weatherOfToday.temperature} °C",
                           style: TextStyle(color: Colors.white, fontSize: 20),
                           textAlign: TextAlign.left,
                         ),
                       ),
                       Expanded(
                         child: Text(
-                          "Brest Les Puissants, FR",
+                          "${_weatherOfToday.city}",
                           style: TextStyle(color: Colors.white),
                           textAlign: TextAlign.right,
                         ),
@@ -148,7 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: <Widget>[
                       Expanded(
                         child: Text(
-                          "Ciel dégagé",
+                          "${_weatherOfToday.mainWeather}",
                           style: TextStyle(color: Colors.white),
                           textAlign: TextAlign.left,
                         ),
@@ -156,13 +167,13 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   Center(
-                    child: Image(image: AssetImage("assets/images/bigsun1.png"), height:150),
+                    child: Image.network(_weatherOfToday.icon),
                   ),
                   Container(
                       padding: EdgeInsets.all(10),
                       child: Expanded(
                         child: Text(
-                          "Mercredi",
+                          "${weekDays.values[_weatherOfToday.day.weekday].toString().split(".")[1]}",
                           style: TextStyle(color: Colors.white, fontSize: 20),
                           textAlign: TextAlign.center,
                         ),
@@ -220,7 +231,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 child: IconButton(
                                   icon: Icon(Icons.refresh),
                                   color: Colors.white,
-                                  onPressed: () {},
+                                  onPressed: () {setState(() {});},
                                 ),
                               ),
                             ),
